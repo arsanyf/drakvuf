@@ -131,8 +131,7 @@ static inline void disable_plugin(char* optarg, bool* plugin_list)
 int main(int argc, char** argv)
 {
     int c, rc = 1, timeout = 0;
-    char* inject_file = NULL;
-    injection_method_t injection_method = INJECT_METHOD_CREATEPROC;
+    char* inject_cmd = NULL;
     char* domain = NULL;
     char* rekall_profile = NULL;
     char* dump_folder = NULL;
@@ -146,8 +145,6 @@ int main(int argc, char** argv)
     bool verbose = 0;
     bool cpuid_stealth = 0;
     bool leave_paused = 0;
-    char const* syscalls_filter_file = NULL;
-    bool dump_modified_files = false;
 
     fprintf(stderr, "%s v%s\n", PACKAGE_NAME, PACKAGE_VERSION);
 
@@ -165,8 +162,7 @@ int main(int argc, char** argv)
                 "Optional inputs:\n"
                 "\t -i <injection pid>        The PID of the process to hijack for injection\n"
                 "\t -I <injection thread>     The ThreadID in the process to hijack for injection (requires -i)\n"
-                "\t -e <inject_file>          The executable to start with injection\n"
-                "\t -m <inject_method>        The injection method (default or shellexec for Windows amd64 only)\n"
+                "\t -e <inject_exe>           The executable to start with injection\n"
                 "\t -t <timeout>              Timeout (in seconds)\n"
                 "\t -o <format>               Output format (default or csv)\n"
                 "\t -x <plugin>               Don't activate the specified plugin\n"
@@ -174,7 +170,6 @@ int main(int argc, char** argv)
                 "\t -w <process name>         Wait with plugin start until process name is detected\n"
 #ifdef ENABLE_PLUGIN_FILEDELETE
                 "\t -D <file dump folder>     Folder where extracted files should be stored at\n"
-                "\t -M                        Dump new or modified files also (requires -D)\n"
 #endif
 #ifdef ENABLE_PLUGIN_SOCKETMON
                 "\t -T <rekall profile>       The Rekall profile for tcpip.sys\n"
@@ -185,14 +180,11 @@ int main(int argc, char** argv)
 #ifdef DRAKVUF_DEBUG
                 "\t -v                        Turn on verbose (debug) output\n"
 #endif
-#ifdef ENABLE_PLUGIN_SYSCALLS
-                "\t -S <syscalls filter>      File with list of syscalls for trap in syscalls plugin (trap all if parameter is absent)\n"
-#endif
                );
         return rc;
     }
 
-    while ((c = getopt (argc, argv, "r:d:i:I:e:m:t:D:o:vx:spw:T:S:M")) != -1)
+    while ((c = getopt (argc, argv, "r:d:i:I:e:t:D:o:vx:spw:T:")) != -1)
         switch (c)
         {
             case 'r':
@@ -208,13 +200,7 @@ int main(int argc, char** argv)
                 injection_thread = atoi(optarg);
                 break;
             case 'e':
-                inject_file = optarg;
-                break;
-            case 'm':
-                if (!strncmp(optarg,"shellexec",9))
-                    injection_method = INJECT_METHOD_SHELLEXEC;
-                if (!strncmp(optarg,"createproc",10))
-                    injection_method = INJECT_METHOD_CREATEPROC;
+                inject_cmd = optarg;
                 break;
             case 't':
                 timeout = atoi(optarg);
@@ -225,6 +211,8 @@ int main(int argc, char** argv)
             case 'o':
                 if (!strncmp(optarg,"csv",3))
                     output = OUTPUT_CSV;
+                if (!strncmp(optarg,"json",4))
+                    output = OUTPUT_JSON;
                 break;
             case 'x':
                 disable_plugin(optarg, plugin_list);
@@ -246,12 +234,6 @@ int main(int argc, char** argv)
                 verbose = 1;
                 break;
 #endif
-            case 'S':
-                syscalls_filter_file = optarg;
-                break;
-            case 'M':
-                dump_modified_files = true;
-                break;
             default:
                 fprintf(stderr, "Unrecognized option: %c\n", c);
                 return rc;
@@ -292,10 +274,10 @@ int main(int argc, char** argv)
     sigaction(SIGINT, &act, NULL);
     sigaction(SIGALRM, &act, NULL);
 
-    if ( injection_pid > 0 && inject_file )
+    if ( injection_pid > 0 && inject_cmd )
     {
-        PRINT_DEBUG("Starting injection with PID %i(%i) for %s\n", injection_pid, injection_thread, inject_file);
-        int ret = drakvuf->inject_cmd(injection_pid, injection_thread, inject_file, injection_method);
+        PRINT_DEBUG("Starting injection with PID %i(%i) for %s\n", injection_pid, injection_thread, inject_cmd);
+        int ret = drakvuf->inject_cmd(injection_pid, injection_thread, inject_cmd);
         if (!ret)
             goto exit;
     }
@@ -308,7 +290,7 @@ int main(int argc, char** argv)
 
     PRINT_DEBUG("Starting plugins\n");
 
-    if ( drakvuf->start_plugins(plugin_list, dump_folder, dump_modified_files, cpuid_stealth, tcpip, syscalls_filter_file) < 0 )
+    if ( drakvuf->start_plugins(plugin_list, dump_folder, cpuid_stealth, tcpip) < 0 )
         goto exit;
 
     PRINT_DEBUG("Beginning DRAKVUF loop\n");

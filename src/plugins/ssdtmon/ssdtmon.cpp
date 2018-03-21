@@ -132,6 +132,7 @@ event_response_t write_cb(drakvuf_t drakvuf, drakvuf_trap_info_t* info)
         switch (s->format)
         {
             case OUTPUT_CSV:
+            case OUTPUT_JSON:
                 printf("ssdtmon,%" PRIu32 ",0x%" PRIx64 ",%s,%" PRIi64 ", %" PRIi64 "\n",
                        info->vcpu, info->regs->cr3, info->proc_data.name, info->proc_data.userid, (info->trap_pa - s->kiservicetable)/s->ulongs);
                 break;

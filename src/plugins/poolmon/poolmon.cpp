@@ -174,6 +174,19 @@ static event_response_t cb(drakvuf_t drakvuf, drakvuf_trap_info_t* info)
 
     switch (p->format)
     {
+        case OUTPUT_JSON:
+        {
+            std::time_t t = std::time(nullptr);
+            char mbstr[TIMESTAMP_LEN];
+            std::strftime(mbstr, sizeof(mbstr), TIMESTAMP_FORMAT, std::localtime(&t));
+            printf("{\"poolmon\": {\"ts\":\"%s\",\"pid\":%d,\"proc_name\":\"%s\",\"userid\":%" PRIi64 ",\"pool_type\":\"%s\",\"pool_size\":%" PRIu64 "",
+                   mbstr, info->proc_data.pid, info->proc_data.name, info->proc_data.userid,
+                   pool_type<MaxPoolType ? pool_types[pool_type] : "unknown_pool_type", size);
+            if (s)
+                printf(",\"source\":\"%s\",\"description\":\"%s\"", s->source, s->description);
+            printf("}}");
+            break;
+        }
         case OUTPUT_CSV:
         {
             printf("poolmon,%" PRIu32 ",0x%" PRIx64 ",%s,%" PRIi64 ",%s,%s,%" PRIu64 "",

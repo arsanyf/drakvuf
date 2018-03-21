@@ -219,6 +219,7 @@ static event_response_t cb(drakvuf_t drakvuf, drakvuf_trap_info_t* info)
         switch (e->format)
         {
             case OUTPUT_CSV:
+            case OUTPUT_JSON:
                 str_format=CSV_FORMAT32;
                 user_format=CSV_FORMAT_USER;
                 break;

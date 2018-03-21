@@ -105,6 +105,7 @@
 #ifndef DRAKVUF_PLUGINS_H
 #define DRAKVUF_PLUGINS_H
 
+#include <ctime>
 #include <config.h>
 #include <stdlib.h>
 #include <libdrakvuf/libdrakvuf.h>
@@ -116,25 +117,23 @@ struct filedelete_config
 {
     const char* rekall_profile;
     const char* dump_folder;
-    bool dump_modified_files;
 };
 struct socketmon_config
 {
     const char* rekall_profile;
     const char* tcpip_profile;
 };
-struct syscalls_config
-{
-    const char* rekall_profile;
-    const char* syscalls_filter_file;
-};
 
 /***************************************************************************/
+
+#define TIMESTAMP_FORMAT "%Y-%m-%dT%H:%M:%S"
+#define TIMESTAMP_LEN    21
 
 typedef enum
 {
     OUTPUT_DEFAULT,
     OUTPUT_CSV,
+    OUTPUT_JSON,
     __OUTPUT_MAX
 } output_format_t;
 

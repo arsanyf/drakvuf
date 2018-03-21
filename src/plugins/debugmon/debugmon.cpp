@@ -146,6 +146,7 @@ event_response_t debug_cb(drakvuf_t drakvuf, drakvuf_trap_info_t* info)
     switch (s->format)
     {
         case OUTPUT_CSV:
+        case OUTPUT_JSON:
             printf("debugmon,%" PRIu32 ",0x%" PRIx64 ",%s,%" PRIi64 ",%" PRIx64 ",%" PRIi32 ",%s\n",
                    info->vcpu, info->regs->cr3, info->proc_data.name, info->proc_data.userid,
                    info->regs->rip, info->debug->type, debug_type[info->debug->type]);

@@ -108,10 +108,6 @@
 #include "plugins/private.h"
 #include "plugins/plugins.h"
 
-#include <set>
-#include <utility>
-#include <cstdint>
-
 class filedelete: public plugin
 {
 public:
@@ -133,10 +129,6 @@ public:
     page_mode_t pm;
     uint32_t domid;
     output_format_t format;
-
-    std::set<std::pair<vmi_pid_t, uint64_t>> changed_file_handles;
-    int sequence_number;
-
     filedelete(drakvuf_t drakvuf, const void* config, output_format_t output);
     ~filedelete();
 };
